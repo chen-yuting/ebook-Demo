@@ -1,4 +1,4 @@
-@import 'reset'
+@import 'reset';
 
 // 1rem = fontSize px
 // 1px = (1 / fontSize) rem
@@ -9,7 +9,7 @@ $fontSize:37.5;
 }
 
 @mixin center() {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
