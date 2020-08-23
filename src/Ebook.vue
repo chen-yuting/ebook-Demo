@@ -12,7 +12,16 @@
       </div>
     </div>
     <!-- 菜单栏 -->
-    <MenuBar :ifTitleAndMenuShow="ifTitleAndMenuShow" :fontSizeList="fontSizeList" ref="menuBar"></MenuBar>
+    <MenuBar
+      :ifTitleAndMenuShow="ifTitleAndMenuShow"
+      :fontSizeList="fontSizeList"
+      :defaultFontSize="defaultFontSize"
+      @setFontSize="setFontSize"
+      :themeList="themeList"
+      :defaultTheme="defaultTheme"
+      @setTheme="setTheme"
+      ref="menuBar"
+    ></MenuBar>
   </div>
 </template>
 
@@ -26,6 +35,7 @@ export default {
     return {
       book: "",
       rendition: "",
+      themes: "",
       ifTitleAndMenuShow: false,
       fontSizeList: [
         { fontSize: 12 },
@@ -36,6 +46,47 @@ export default {
         { fontSize: 22 },
         { fontSize: 24 },
       ],
+      defaultFontSize: 16,
+      themeList: [
+        {
+          name: "default",
+          style: {
+            body: {
+              color: "#000",
+              background: "#fff",
+            },
+          },
+        },
+        {
+          name: "eye",
+          style: {
+            body: {
+              color: "#000",
+              background: "#ceeaba",
+            },
+          },
+        },
+        {
+          name: "night",
+          style: {
+            body: {
+              color: "#fff",
+              background: "#000",
+            },
+          },
+        },
+        {
+          name: "gold",
+          style: {
+            body: {
+              color: "#000",
+              background: "rgb(241,236,226)",
+            },
+          },
+        },
+      ],
+      defaultTheme: 0,
+      locations: "",
     };
   },
   components: {
@@ -58,7 +109,25 @@ export default {
       });
       //通过Rendition.display渲染电子书
       this.rendition.display();
+      //获取theme对象
+      this.themes = this.rendition.themes;
+      //设置默认字体
+      this.setFontSize(this.defaultFontSize);
+      //创建主题
+      this.registerTheme();
+      //设置默认主题
+      this.setTheme(this.defaultTheme);
+      //获取locations对象，默认不会生成对象，耗性能
+      //通过epubjs的钩子函数来实现
+      this.book.ready
+        .then(() => {
+          return this.book.locations.generate();
+        })
+        .then((result) => {
+          this.locations = this.book.locations;
+        });
     },
+
     prevPage() {
       if (this.rendition) {
         this.rendition.prev();
@@ -75,6 +144,21 @@ export default {
       if (!this.ifTitleAndMenuShow) {
         this.$refs.menuBar.hideSetting();
       }
+    },
+    setFontSize(fontSize) {
+      this.defaultFontSize = fontSize;
+      if (this.themes) {
+        this.themes.fontSize(fontSize + "px");
+      }
+    },
+    registerTheme() {
+      this.themeList.forEach((theme) => {
+        this.themes.register(theme.name, theme.style);
+      });
+    },
+    setTheme(index) {
+      this.themes.select(this.themeList[index].name);
+      this.defaultTheme = index;
     },
   },
 };
