@@ -20,6 +20,10 @@
       :themeList="themeList"
       :defaultTheme="defaultTheme"
       @setTheme="setTheme"
+      :bookAvailable="bookAvailable"
+      @onProgressChange="onProgressChange"
+      :navigation="navigation"
+      @jumpTo="jumpTo"
       ref="menuBar"
     ></MenuBar>
   </div>
@@ -87,6 +91,9 @@ export default {
       ],
       defaultTheme: 0,
       locations: "",
+      //图书是否处于可用状态
+      bookAvailable: false,
+      navigation: {},
     };
   },
   components: {
@@ -117,14 +124,17 @@ export default {
       this.registerTheme();
       //设置默认主题
       this.setTheme(this.defaultTheme);
-      //获取locations对象，默认不会生成对象，耗性能
+      //获取navigation目录
+      //获取locations对象进度条，默认不会生成对象，耗性能
       //通过epubjs的钩子函数来实现
       this.book.ready
         .then(() => {
+          this.navigation = this.book.navigation;
           return this.book.locations.generate();
         })
         .then((result) => {
           this.locations = this.book.locations;
+          this.bookAvailable = true;
         });
     },
 
@@ -159,6 +169,26 @@ export default {
     setTheme(index) {
       this.themes.select(this.themeList[index].name);
       this.defaultTheme = index;
+    },
+    //progress 进度条的数值(0-100)
+    onProgressChange(progress) {
+      const percentage = progress / 100;
+      const location =
+        percentage > 0 ? this.locations.cfiFromPercentage(percentage) : 0;
+      this.rendition.display(location);
+    },
+    //根据链接跳转到指定位置
+    jumpTo(href) {
+      this.rendition.display(href);
+      this.hideTitleAndMenu();
+    },
+    hideTitleAndMenu() {
+      //隐藏标题栏和菜单栏
+      this.ifTitleAndMenuShow = false;
+      //隐藏菜单栏弹出的设置栏
+      this.$refs.menuBar.hideSetting();
+      //隐藏目录
+      this.$refs.menuBar.hideContent();
     },
   },
 };
